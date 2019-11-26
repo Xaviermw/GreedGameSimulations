@@ -1,39 +1,75 @@
-from Components.round import ExtraCardGameRound
-from Components.players import NeighborSuspicionAlwaysRandomPlayer, playerUpdateRelations
-from Components.deck import Card
-
-# Function that prints results of each line to the command line
-def printRoundResults(leftover_card, game_round, players):
-	print(str(game_round))
-	print("Players Left: " + str(players))
-	print("Leftover Card: " + str(leftover_card.card_type))
-	print()
+from Components.players import NeighborSuspicionAlwaysRandomPlayer, AlwaysRandomPlayer
+from Components.game import ExtraCardGame
+import random
 
 NUMBER_OF_PLAYERS = 6
+NUMBER_OF_DOUBLES_PER_ROUND = 1
+TREASURE_THRESHOLD = 3
+SEE_LOGS_FROM_EACH_ROUND = False
 
-# Create Players
-# Win Threshold, PlayerID, Default Threshold Level
+# Chance of getting caught, lower is less likely
+BASE_SUSPICION_THRESHOLD = 0.5
+
+# Increases the suspicion of a player when they have more doubles than those next to them (Multiplies with Base)
+INCREASED_SUSPICION_RATE = 1.5
+
+# Decreased the suspicion of a player when they have less doubles than those next to them (Multiplies with Base)
+DECREASED_SUSPICION_RATE = 0.5
+
 # players = [AlwaysRandomPlayer(3, i+1, 0.5) for i in range(NUMBER_OF_PLAYERS)]
 
-players = [NeighborSuspicionAlwaysRandomPlayer(3, i+1, 0.5, 1.5, 0.5) for i in range(NUMBER_OF_PLAYERS)]
+SIMULATIONS = 10000
+duelWins = 0
+duelTies = 0
+scoreWins = 0
+rounds = 0
 
-# First Round
-game_round = ExtraCardGameRound(players, Card("single"))
-end_of_round_players = game_round.players
+# Counts of different types of players winning
+# neighborCount = 0
+# nonCount = 0
 
-# Repeat Until A Winner is Found
-while game_round.result.result == "continue":
+for i in range(SIMULATIONS):
+	
+	print("Simulation Number " + str(i))
+	print("")
 
-	leftover_card = game_round.getLeftoverCard()
+	# Create new players each game
+	players = [NeighborSuspicionAlwaysRandomPlayer(TREASURE_THRESHOLD, i+1, BASE_SUSPICION_THRESHOLD, INCREASED_SUSPICION_RATE, DECREASED_SUSPICION_RATE) for i in range(NUMBER_OF_PLAYERS)]
 
-	printRoundResults(leftover_card, game_round, end_of_round_players)
+	# Combined players of different types instead
+	# players = [NeighborSuspicionAlwaysRandomPlayer(TREASURE_THRESHOLD, i+1, BASE_SUSPICION_THRESHOLD, INCREASED_SUSPICION_RATE, DECREASED_SUSPICION_RATE) for i in range(3)] + [AlwaysRandomPlayer(TREASURE_THRESHOLD, j+4, BASE_SUSPICION_THRESHOLD) for j in range(3)]
 
-	end_of_round_players = playerUpdateRelations(end_of_round_players)
+	random.shuffle(players)
 
-	game_round = ExtraCardGameRound(end_of_round_players, leftover_card)
+	new_game = ExtraCardGame(players, NUMBER_OF_DOUBLES_PER_ROUND, SEE_LOGS_FROM_EACH_ROUND)
+	new_game.run_game()
+	print("")
+	print("outcome, number score winners or duel score, rounds played, players left at end")
+	print(new_game.getGameStatsForCSV())
+	print("")
+	if new_game.last_round.result.result == "duelWin":
+		duelWins = duelWins + 1
+	elif new_game.last_round.result.result == "duelTie":
+		duelTies = duelTies + 1
+	elif new_game.last_round.result.result == "scoreWin":
+		scoreWins = scoreWins + 1
+	else:
+		raise Exception("Weird Result: " + str(new_game.result.result))
+	rounds = rounds + new_game.rounds_played
 
-	end_of_round_players = game_round.players
+	# Code for seeing what types of players win
+	# for x in new_game.ending_players:
+	# 	if x.is_winner == True:
+	# 		if type(x).__name__ == "NeighborSuspicionAlwaysRandomPlayer":
+	# 			neighborCount = neighborCount + 1
+	# 		elif type(x).__name__ == "AlwaysRandomPlayer":
+	# 			nonCount = nonCount + 1
 
+print("Duel Wins: " + str(duelWins/SIMULATIONS))
+print("Duel Ties: " + str(duelTies/SIMULATIONS))
+print("Score Wins: " + str(scoreWins/SIMULATIONS))
+print("Average Rounds: " + str(rounds/SIMULATIONS))
 
-leftover_card = game_round.getLeftoverCard()
-printRoundResults(leftover_card, game_round, end_of_round_players)
+# Player Type Stats
+# print("Neighbor Wins: " + str(neighborCount/SIMULATIONS))
+# print("Non Neighbor Wins: " + str(nonCount/SIMULATIONS))

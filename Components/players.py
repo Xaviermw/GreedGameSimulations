@@ -1,5 +1,5 @@
 import random
-from .deck import *
+from .deck import Card
 
 # Base Player
 class Player:

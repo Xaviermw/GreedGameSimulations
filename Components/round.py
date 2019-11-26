@@ -16,13 +16,13 @@ class RoundResult:
 class ExtraCardGameRound:
 
 	# Set initial values and create the deck
-	def __init__(self, players, leftover_card):
+	def __init__(self, players, doubles, leftover_card):
 		self.result = RoundResult("continue", 0)
 		self.had_elimination = False
 		self.players = players
 		self.guiltyPlayers = []
 		self.num_players = len(self.players)
-		self.deck = TreasureDeck(len(self.players)-1, 1, leftover_card)
+		self.deck = TreasureDeck(len(self.players)-doubles, doubles, leftover_card)
 		self.deck.shuffle()
 
 		self.drawCards()
@@ -77,6 +77,7 @@ class ExtraCardGameRound:
 			if player.is_winner:
 				self.result.result = "scoreWin"
 				self.result.note = str(int(self.result.note) + 1)
+				player.is_winner = True
 		if self.result.result != "scoreWin" and len(self.players) == 2:
 			self.duel()
 
@@ -87,10 +88,14 @@ class ExtraCardGameRound:
 
 		if p_one_score > p_two_score:
 			self.result = RoundResult("duelWin", str(p_one_score) + " to " + str(p_two_score))
+			self.players[0].is_winner = True
 		elif p_two_score > p_one_score:
 			self.result = RoundResult("duelWin", str(p_two_score) + " to " + str(p_one_score))
+			self.players[1].is_winner = True
 		else:						
 			self.result = RoundResult("duelTie", str(p_one_score))
+			self.players[0].is_winner = True
+			self.players[1].is_winner = True
 
 	# Contains the last card in the deck after the round is over
 	def getLeftoverCard(self):

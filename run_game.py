@@ -1,19 +1,21 @@
 from Components.round import ExtraCardGameRound
-from Components.players import AlwaysRandomPlayer, playerUpdateRelations
+from Components.players import NeighborSuspicionAlwaysRandomPlayer, playerUpdateRelations
 from Components.deck import Card
 
 # Function that prints results of each line to the command line
 def printRoundResults(leftover_card, game_round, players):
 	print(str(game_round))
 	print("Players Left: " + str(players))
-	print("Leftover Card: " + str(leftover_card))
+	print("Leftover Card: " + str(leftover_card.card_type))
 	print()
 
 NUMBER_OF_PLAYERS = 6
 
 # Create Players
 # Win Threshold, PlayerID, Default Threshold Level
-players = [AlwaysRandomPlayer(3, i+1, 0.5) for i in range(NUMBER_OF_PLAYERS)]
+# players = [AlwaysRandomPlayer(3, i+1, 0.5) for i in range(NUMBER_OF_PLAYERS)]
+
+players = [NeighborSuspicionAlwaysRandomPlayer(3, i+1, 0.5, 1.5, 0.5) for i in range(NUMBER_OF_PLAYERS)]
 
 # First Round
 game_round = ExtraCardGameRound(players, Card("single"))
